@@ -93,7 +93,7 @@ userSchema.methods.checkPassword = async function (candidatePassword,userPasswor
 
  
 //Function that creates a random reset token 
-userSchema.methods.generatePasswordResetToken()
+userSchema.methods.generatePasswordResetToken =async function ()
 {
 const resetToken = crypto.randomBytes(32).toString("hex"); //will be sent via email
 //saved in te database crypted 

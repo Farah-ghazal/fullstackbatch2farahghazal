@@ -1,15 +1,18 @@
-const mongoose= require ("mongoose");
+const mongoose= require ('mongoose');
 const dotenv= require ("dotenv");
 mongoose.set("strictQuery",true)
 dotenv.config();
 
-exports.connectDB = async () =>{
-    try {
-        await mongoose.connect(process.env.DB_URL,() =>{
-            console.log("connected to the database");
-        });
-    } catch (err) {
-        console.log(err);
-        process.exit(1);
-    }
+function connectDB(){
+
+    mongoose.connect(process.env.DB_URL)
+    .then(() => {
+      console.log('Connected to MongoDB Atlas successfully!');
+    })
+    .catch((error) => {
+      console.error('Error connecting to MongoDB Atlas:', error);
+    });
+
 };
+
+module.exports = {connectDB};

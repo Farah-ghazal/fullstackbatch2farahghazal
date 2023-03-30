@@ -1,6 +1,6 @@
 const User = require("../models/userModel");
 const validator = require("validator");
-const jwt = require("jwt");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const {promisify} = require("util"); // convert ffrom callback function to promise
 
