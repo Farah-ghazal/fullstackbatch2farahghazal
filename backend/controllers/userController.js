@@ -3,14 +3,15 @@ const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const {promisify} = require("util"); // convert ffrom callback function to promise
+const sendMail = require("../utlis/email").sendMail; 
 
 const signToken = (id) =>{
     return jwt.sign({id},process.env.JWT_SECRET,{
-      expiresIN: process.env.JWT_EXPIRES_IN,  
+      expiresIn: process.env.JWT_EXPIRES_IN,  
     });
 };
 
-
+// function that sends the token to the user
 const createSendToken = (user,statusCode,res) =>{
     const token = signToken(user._id);
     res.status(statusCode).json({
@@ -23,7 +24,7 @@ const createSendToken = (user,statusCode,res) =>{
 };
 
 
-exports.signUp = async(req,res) => {
+exports.signup = async(req,res) => {
     try {
         const emailCheck = await User.findOne({email : req.body.email});
         if(emailCheck){
@@ -77,9 +78,9 @@ exports.login = async(req,res) =>{
         }
         // 3:If everything is OK log the user in
      //return res.status(200).json({message:"You are logged in successfully"});
-     createSendToken(newUser,200,res)
+     createSendToken(user,200,res)
     } catch (error) {
-        console.log(err.message);
+        console.log(error.message);
     }
 }
 
@@ -96,15 +97,34 @@ exports.forgotPassword = async(req,res) =>{
         // 3-send the token via email
         // http://127.0.0.1:3000/api/auth/resetPassword/sddhflliauhdfuaerinjkddbvkabvju
         // 3-1 create this url 
-        const url = `${req.protocol}://${req.get("host")}/api/auth/resetPassword/${resetToken}}`;
+        const url = `${req.protocol}://${req.get("host")}/api/user/resetPassword/${resetToken}}`;
         //3-2 message created 
         const msg = `Forgot your password? Reset it by visiting the following link${url}`;
-    
+     // to send the email 
+     try {
+        await sendMail({
+            email: user.email,
+            subject: "Your password reset token is valid for 10 minutes ",
+            message: msg,
+        })
+        res.status(200).json({
+            status:"success",
+            message:"The reset link was sent to your email successfully",
+        });
+     } catch (err) {
+        // if there is an error release the token 
+        user.passwordResetToken = undefined ;
+        user.passwordResetExpires = undefined ; 
+        await user.save({validateBeforeSave: false});
+        res
+        .status(500)
+        .json({message:"An error occured while sending the email , please try again after few seconds"});
+     }
     
     } catch (err) {
         console.log(err); 
     }
-}
+};
 
 exports.resetPassword = async (req,res) =>{
     try {
@@ -170,14 +190,15 @@ exports.protect = async(req,res,next) =>{
     //3- check the user is still exist  maybe the user is  deleted but the token is still surviving 
     const currentUser = await User.findById(decoded.id);
     if(!currentUser){
-        return res.status(401).json("The token owner no longer exists");
+        return res.status(401).json(  "The token owner no longer exists");
     }
     // 4- check if the user changed the password after recieving the token
     //  iat  initialization date of the token 
-    if(currentUser.passwordChangedAfterTokenIssued(detected.iat)){
+
+    if(currentUser.passwordChangedAfterTokenIssued(decoded.iat)){
         return res.status(401).json({message:"Your password has been changed, please log in again."});
     }
-    //we add the user to all the requests
+    // 5 everything is ok we add the user to all the requests
     req.user = currentUser;
     next();
     }catch(err){

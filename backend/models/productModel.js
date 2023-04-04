@@ -31,11 +31,11 @@ const reviewSchema = new mongoose.Schema(
 
 
 
-      productImage: { 
-              type: String,   // the url of the image 
-               required: true,
-               default:"",
-             },
+      //productImage: { 
+       //       type: String,   // the url of the image 
+       //        required: false,
+       //        default:"",
+        //     },
 
 
       productPrice: { 
@@ -69,5 +69,24 @@ const reviewSchema = new mongoose.Schema(
       timestamps: true,
     }
   );
+  exports.searchProduct = async (req, res) => {
+    try {
+      const query = req.query.q;
+      const products = await Product.find({
+        $or: [
+          { productName: { $regex: query, $options: "i" } },
+          { productDescription: { $regex: query, $options: "i" } },
+        ],
+      });
+      if (products.length <= 0) {
+        return res.status(404).json({ message: "No matching products found" });
+      }
+      return res.status(200).json(products);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json(err);
+    }
+  };
+  
   module.exports = mongoose.model("Product", productSchema);
 

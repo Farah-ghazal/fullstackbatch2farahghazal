@@ -3,16 +3,16 @@ const app = express();
 const DB = require("./database").connectDB;
 //Routes
 const userRouter = require("./routers/userRouter")
-const cardRouter = require("./routers/cartRouter");
+const cartRouter = require("./routers/cartRouter");
 const orderRouter = require("./routers/orderRouter")
 const productRouter = require("./routers/productRouter")
-//signup path: http://localhost:3000/api/auth/signup
+
 
 //connect to the database
 DB();
 app.use(express.json());
 app.use("/api/user", userRouter);
-app.use("/api/cart", cardRouter);
+app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/product", productRouter);
 

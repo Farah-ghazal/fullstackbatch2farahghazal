@@ -41,13 +41,6 @@ const userSchema = new mongoose.Schema(
         trim:true,
         required:[true,"Please confirm your Password"]
      },
-     phoneNumber:{
-      type:Number,
-        minLength:8,
-        maxLength:8,
-        trim:true,
-        required:[true,"Please enter you phone number"]
-     },
      role:{
         type:String,
         default:"user",

@@ -5,7 +5,7 @@ const User = require("../models/userModel");
 const checkAdmin = async (req) =>{
     try{
         const user = await User.findOne({_id: req.user._id});
-
+      
         if(!user || user.role !== "admin"){
             return false;
         }else{
@@ -104,16 +104,22 @@ exports.getAllProducts = async (req,res) => {
     }
 };
 
-exports.FindProduct = async (req,res) => {
+exports.searchProduct = async (req,res) => {
     try {
-         const product = await Product.findById(req.params.productID)
-         if(!product){
-            return res.status(404).json({message:" Product not found"});
-         }
-         return res.status(200).json(product);
-    } catch (err) {
+        const query = req.query.q;
+        const products = await Product.find({
+          $or: [
+            { productName: { $regex: query, $options: "i" } },
+            { productDescription: { $regex: query, $options: "i" } },
+          ],
+        });
+        if (products.length <= 0) {
+          return res.status(404).json({ message: "No matching products found" });
+        }
+        return res.status(200).json(products);
+      } catch (err) {
         console.log(err);
         res.status(500).json(err);
-    }
+      }
 };
 
